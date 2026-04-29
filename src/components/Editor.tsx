@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useEditor, EditorContent, type Editor as TipTapEditor } from "@tiptap/react";
+import { Extension } from "@tiptap/core";
+import {
+  useEditor,
+  EditorContent,
+  ReactNodeViewRenderer,
+  type Editor as TipTapEditor,
+} from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -9,11 +15,27 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { createClient } from "@/lib/supabase/client";
 import { prepareImageForUpload } from "@/lib/image";
 import ImageCropDialog from "./ImageCropDialog";
+import BlogImageNodeView from "./BlogImageNodeView";
 
 type Props = {
   value: string;
   onChange: (html: string) => void;
 };
+
+const ImageActions = Extension.create({
+  name: "imageActions",
+  addStorage() {
+    return {
+      onCrop: null as ((src: string, pos: number) => void) | null,
+    };
+  },
+});
+
+const CustomImage = Image.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(BlogImageNodeView);
+  },
+});
 
 function ToolbarButton({
   active,
@@ -35,9 +57,7 @@ function ToolbarButton({
       title={title}
       disabled={disabled}
       className={`px-2.5 h-8 rounded text-sm font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-        active
-          ? "bg-black text-white"
-          : "hover:bg-zinc-100 text-zinc-700"
+        active ? "bg-black text-white" : "hover:bg-zinc-100 text-zinc-700"
       }`}
     >
       {children}
@@ -62,13 +82,7 @@ async function uploadBlob(blob: Blob, ext = "jpg"): Promise<string> {
   return data.publicUrl;
 }
 
-function Toolbar({
-  editor,
-  onRequestCrop,
-}: {
-  editor: TipTapEditor | null;
-  onRequestCrop: () => void;
-}) {
+function Toolbar({ editor }: { editor: TipTapEditor | null }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadAndInsert = useCallback(
@@ -114,34 +128,26 @@ function Toolbar({
 
   if (!editor) return null;
 
-  const imageSelected = editor.isActive("image");
-
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-[var(--border)] px-2 py-2 sticky top-0 bg-white z-10">
       <ToolbarButton
         title="제목 1"
         active={editor.isActive("heading", { level: 1 })}
-        onClick={() =>
-          editor.chain().focus().toggleHeading({ level: 1 }).run()
-        }
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
       >
         H1
       </ToolbarButton>
       <ToolbarButton
         title="제목 2"
         active={editor.isActive("heading", { level: 2 })}
-        onClick={() =>
-          editor.chain().focus().toggleHeading({ level: 2 }).run()
-        }
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
       >
         H2
       </ToolbarButton>
       <ToolbarButton
         title="제목 3"
         active={editor.isActive("heading", { level: 3 })}
-        onClick={() =>
-          editor.chain().focus().toggleHeading({ level: 3 }).run()
-        }
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
       >
         H3
       </ToolbarButton>
@@ -207,17 +213,6 @@ function Toolbar({
       <ToolbarButton title="이미지 추가" onClick={onPickImage}>
         🖼️
       </ToolbarButton>
-      <ToolbarButton
-        title={
-          imageSelected
-            ? "선택한 이미지 자르기"
-            : "이미지를 클릭한 뒤 사용하세요"
-        }
-        onClick={onRequestCrop}
-        disabled={!imageSelected}
-      >
-        ✂️
-      </ToolbarButton>
       <input
         ref={fileInputRef}
         type="file"
@@ -230,12 +225,16 @@ function Toolbar({
 }
 
 export default function Editor({ value, onChange }: Props) {
-  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropTarget, setCropTarget] = useState<{
+    src: string;
+    pos: number;
+  } | null>(null);
 
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Image.configure({ inline: false, allowBase64: false }),
+      CustomImage.configure({ inline: false, allowBase64: false }),
+      ImageActions,
       Link.configure({ openOnClick: false, autolink: true }),
       Placeholder.configure({ placeholder: "여기에 글을 작성하세요…" }),
     ],
@@ -254,38 +253,54 @@ export default function Editor({ value, onChange }: Props) {
 
   useEffect(() => {
     if (!editor) return;
+    const storage = (editor.storage as unknown as {
+      imageActions: { onCrop: ((src: string, pos: number) => void) | null };
+    }).imageActions;
+    storage.onCrop = (src, pos) => setCropTarget({ src, pos });
+    return () => {
+      storage.onCrop = null;
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
     if (value && editor.getHTML() === "<p></p>") {
       editor.commands.setContent(value, { emitUpdate: false });
     }
   }, [value, editor]);
 
-  const handleRequestCrop = () => {
-    if (!editor) return;
-    const src = editor.getAttributes("image")?.src as string | undefined;
-    if (!src) return;
-    setCropSrc(src);
-  };
-
   const handleCropApply = async (blob: Blob) => {
-    if (!editor) return;
+    if (!editor || !cropTarget) return;
     try {
       const url = await uploadBlob(blob, "jpg");
-      editor.chain().focus().updateAttributes("image", { src: url }).run();
+      editor
+        .chain()
+        .focus()
+        .command(({ tr, state }) => {
+          const node = state.doc.nodeAt(cropTarget.pos);
+          if (!node || node.type.name !== "image") return false;
+          tr.setNodeMarkup(cropTarget.pos, undefined, {
+            ...node.attrs,
+            src: url,
+          });
+          return true;
+        })
+        .run();
     } catch (e) {
       alert(`업로드 실패: ${(e as Error).message}`);
     } finally {
-      setCropSrc(null);
+      setCropTarget(null);
     }
   };
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-white overflow-hidden">
-      <Toolbar editor={editor} onRequestCrop={handleRequestCrop} />
+      <Toolbar editor={editor} />
       <EditorContent editor={editor} />
-      {cropSrc ? (
+      {cropTarget ? (
         <ImageCropDialog
-          src={cropSrc}
-          onCancel={() => setCropSrc(null)}
+          src={cropTarget.src}
+          onCancel={() => setCropTarget(null)}
           onApply={handleCropApply}
         />
       ) : null}
