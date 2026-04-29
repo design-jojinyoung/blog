@@ -22,6 +22,8 @@ export async function createPost(formData: FormData) {
   const slugInput = String(formData.get("slug") ?? "").trim();
   const content = String(formData.get("content") ?? "");
   const coverImage = String(formData.get("cover_image") ?? "").trim() || null;
+  const coverPosition =
+    String(formData.get("cover_position") ?? "").trim() || "50% 50%";
   const published = formData.get("published") === "on";
 
   if (!title) redirect("/admin/new?error=title");
@@ -38,6 +40,7 @@ export async function createPost(formData: FormData) {
       content,
       excerpt,
       cover_image: coverImage,
+      cover_position: coverPosition,
       published,
     })
     .select("id, slug")
@@ -61,6 +64,8 @@ export async function updatePost(id: string, formData: FormData) {
   const slugInput = String(formData.get("slug") ?? "").trim();
   const content = String(formData.get("content") ?? "");
   const coverImage = String(formData.get("cover_image") ?? "").trim() || null;
+  const coverPosition =
+    String(formData.get("cover_position") ?? "").trim() || "50% 50%";
   const published = formData.get("published") === "on";
 
   if (!title) redirect(`/admin/${id}/edit?error=title`);
@@ -77,6 +82,7 @@ export async function updatePost(id: string, formData: FormData) {
       content,
       excerpt,
       cover_image: coverImage,
+      cover_position: coverPosition,
       published,
     })
     .eq("id", id);

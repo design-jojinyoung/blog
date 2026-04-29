@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor as TipTapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -8,6 +8,7 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { createClient } from "@/lib/supabase/client";
 import { prepareImageForUpload } from "@/lib/image";
+import ImageCropDialog from "./ImageCropDialog";
 
 type Props = {
   value: string;
@@ -17,11 +18,13 @@ type Props = {
 function ToolbarButton({
   active,
   onClick,
+  disabled,
   children,
   title,
 }: {
   active?: boolean;
   onClick: () => void;
+  disabled?: boolean;
   children: React.ReactNode;
   title: string;
 }) {
@@ -30,7 +33,8 @@ function ToolbarButton({
       type="button"
       onClick={onClick}
       title={title}
-      className={`px-2.5 h-8 rounded text-sm font-medium transition-colors cursor-pointer ${
+      disabled={disabled}
+      className={`px-2.5 h-8 rounded text-sm font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
         active
           ? "bg-black text-white"
           : "hover:bg-zinc-100 text-zinc-700"
@@ -41,7 +45,30 @@ function ToolbarButton({
   );
 }
 
-function Toolbar({ editor }: { editor: TipTapEditor | null }) {
+async function uploadBlob(blob: Blob, ext = "jpg"): Promise<string> {
+  const supabase = createClient();
+  const path = `posts/${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}.${ext}`;
+  const file =
+    blob instanceof File
+      ? blob
+      : new File([blob], `image.${ext}`, { type: blob.type || "image/jpeg" });
+  const { error } = await supabase.storage
+    .from("blog-images")
+    .upload(path, file, { cacheControl: "3600", upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from("blog-images").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function Toolbar({
+  editor,
+  onRequestCrop,
+}: {
+  editor: TipTapEditor | null;
+  onRequestCrop: () => void;
+}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadAndInsert = useCallback(
@@ -54,20 +81,13 @@ function Toolbar({ editor }: { editor: TipTapEditor | null }) {
         alert(`이미지 변환 실패 (HEIC 등): ${(e as Error).message}`);
         return;
       }
-      const supabase = createClient();
-      const ext = file.name.split(".").pop() ?? "png";
-      const path = `posts/${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2, 8)}.${ext}`;
-      const { error } = await supabase.storage
-        .from("blog-images")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
-      if (error) {
-        alert(`이미지 업로드 실패: ${error.message}`);
-        return;
+      try {
+        const ext = file.name.split(".").pop() ?? "png";
+        const url = await uploadBlob(file, ext);
+        editor.chain().focus().setImage({ src: url }).run();
+      } catch (e) {
+        alert(`이미지 업로드 실패: ${(e as Error).message}`);
       }
-      const { data } = supabase.storage.from("blog-images").getPublicUrl(path);
-      editor.chain().focus().setImage({ src: data.publicUrl }).run();
     },
     [editor],
   );
@@ -93,6 +113,8 @@ function Toolbar({ editor }: { editor: TipTapEditor | null }) {
   };
 
   if (!editor) return null;
+
+  const imageSelected = editor.isActive("image");
 
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-[var(--border)] px-2 py-2 sticky top-0 bg-white z-10">
@@ -185,6 +207,17 @@ function Toolbar({ editor }: { editor: TipTapEditor | null }) {
       <ToolbarButton title="이미지 추가" onClick={onPickImage}>
         🖼️
       </ToolbarButton>
+      <ToolbarButton
+        title={
+          imageSelected
+            ? "선택한 이미지 자르기"
+            : "이미지를 클릭한 뒤 사용하세요"
+        }
+        onClick={onRequestCrop}
+        disabled={!imageSelected}
+      >
+        ✂️
+      </ToolbarButton>
       <input
         ref={fileInputRef}
         type="file"
@@ -197,6 +230,8 @@ function Toolbar({ editor }: { editor: TipTapEditor | null }) {
 }
 
 export default function Editor({ value, onChange }: Props) {
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -217,7 +252,6 @@ export default function Editor({ value, onChange }: Props) {
     },
   });
 
-  // Sync external value changes (e.g. when initial content loads async)
   useEffect(() => {
     if (!editor) return;
     if (value && editor.getHTML() === "<p></p>") {
@@ -225,10 +259,36 @@ export default function Editor({ value, onChange }: Props) {
     }
   }, [value, editor]);
 
+  const handleRequestCrop = () => {
+    if (!editor) return;
+    const src = editor.getAttributes("image")?.src as string | undefined;
+    if (!src) return;
+    setCropSrc(src);
+  };
+
+  const handleCropApply = async (blob: Blob) => {
+    if (!editor) return;
+    try {
+      const url = await uploadBlob(blob, "jpg");
+      editor.chain().focus().updateAttributes("image", { src: url }).run();
+    } catch (e) {
+      alert(`업로드 실패: ${(e as Error).message}`);
+    } finally {
+      setCropSrc(null);
+    }
+  };
+
   return (
     <div className="rounded-xl border border-[var(--border)] bg-white overflow-hidden">
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} onRequestCrop={handleRequestCrop} />
       <EditorContent editor={editor} />
+      {cropSrc ? (
+        <ImageCropDialog
+          src={cropSrc}
+          onCancel={() => setCropSrc(null)}
+          onApply={handleCropApply}
+        />
+      ) : null}
     </div>
   );
 }

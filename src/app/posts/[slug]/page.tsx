@@ -33,6 +33,7 @@ export default async function PostPage({ params }: { params: Params }) {
             fill
             sizes="100vw"
             className="object-cover"
+            style={{ objectPosition: post.cover_position ?? "50% 50%" }}
             priority
           />
         </div>

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import Image from "next/image";
 import Editor from "./Editor";
+import CoverPositioner from "./CoverPositioner";
 import { createClient } from "@/lib/supabase/client";
 import { prepareImageForUpload } from "@/lib/image";
 
@@ -11,6 +11,7 @@ type Initial = {
   slug: string;
   content: string;
   cover_image: string | null;
+  cover_position: string;
   published: boolean;
 };
 
@@ -32,6 +33,9 @@ export default function PostForm({
   const [content, setContent] = useState(initial?.content ?? "");
   const [coverImage, setCoverImage] = useState<string | null>(
     initial?.cover_image ?? null,
+  );
+  const [coverPosition, setCoverPosition] = useState<string>(
+    initial?.cover_position ?? "50% 50%",
   );
   const [published, setPublished] = useState(initial?.published ?? false);
   const [uploading, setUploading] = useState(false);
@@ -68,6 +72,7 @@ export default function PostForm({
       }
       const { data } = supabase.storage.from("blog-images").getPublicUrl(path);
       setCoverImage(data.publicUrl);
+      setCoverPosition("50% 50%");
     } finally {
       setUploading(false);
     }
@@ -77,8 +82,13 @@ export default function PostForm({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     formData.set("content", content);
-    if (coverImage) formData.set("cover_image", coverImage);
-    else formData.delete("cover_image");
+    if (coverImage) {
+      formData.set("cover_image", coverImage);
+      formData.set("cover_position", coverPosition);
+    } else {
+      formData.delete("cover_image");
+      formData.set("cover_position", "50% 50%");
+    }
     startTransition(() => {
       action(formData);
     });
@@ -127,21 +137,21 @@ export default function PostForm({
       <div>
         <label className="block text-sm font-medium mb-1.5">대표 이미지</label>
         {coverImage ? (
-          <div className="relative aspect-[16/8] mb-3 overflow-hidden rounded-xl bg-[var(--border)]">
-            <Image
-              src={coverImage}
-              alt="cover"
-              fill
-              sizes="(max-width: 768px) 100vw, 768px"
-              className="object-cover"
+          <div className="mb-3 space-y-2">
+            <CoverPositioner
+              url={coverImage}
+              position={coverPosition}
+              onChange={setCoverPosition}
             />
-            <button
-              type="button"
-              onClick={() => setCoverImage(null)}
-              className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2.5 py-1.5 rounded-md hover:bg-black/90 cursor-pointer"
-            >
-              제거
-            </button>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setCoverImage(null)}
+                className="text-xs text-red-600 hover:text-red-700 cursor-pointer"
+              >
+                이미지 제거
+              </button>
+            </div>
           </div>
         ) : null}
         <button

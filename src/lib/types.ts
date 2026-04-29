@@ -4,6 +4,7 @@ export type Post = {
   slug: string;
   content: string;
   cover_image: string | null;
+  cover_position: string;
   excerpt: string | null;
   published: boolean;
   created_at: string;

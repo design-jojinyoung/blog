@@ -7,6 +7,7 @@ import type { Post } from "@/lib/types";
 export const revalidate = 0;
 
 function PostCard({ post, large = false }: { post: Post; large?: boolean }) {
+  const coverPos = post.cover_position ?? "50% 50%";
   return (
     <Link
       href={`/posts/${encodeURIComponent(post.slug)}`}
@@ -24,6 +25,7 @@ function PostCard({ post, large = false }: { post: Post; large?: boolean }) {
             fill
             sizes={large ? "(max-width: 768px) 100vw, 768px" : "(max-width: 768px) 100vw, 360px"}
             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            style={{ objectPosition: coverPos }}
           />
         </div>
       ) : (

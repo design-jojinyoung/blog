@@ -45,6 +45,7 @@ export default async function EditPostPage({
           slug: post.slug,
           content: post.content,
           cover_image: post.cover_image,
+          cover_position: post.cover_position ?? "50% 50%",
           published: post.published,
         }}
         action={update}
