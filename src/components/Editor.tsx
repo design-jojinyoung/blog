@@ -243,7 +243,7 @@ export default function Editor({ value, onChange }: Props) {
     editorProps: {
       attributes: {
         class:
-          "tiptap min-h-[400px] px-5 py-5 focus:outline-none text-[1.05rem] leading-[1.75]",
+          "tiptap min-h-[400px] max-h-[600px] overflow-y-auto px-5 py-5 focus:outline-none text-[1.05rem] leading-[1.75]",
       },
     },
     onUpdate: ({ editor }) => {

@@ -14,6 +14,9 @@ export default async function Header() {
           <Link href="/" className="hover:text-[var(--foreground)] transition-colors">
             글
           </Link>
+          <Link href="/about" className="hover:text-[var(--foreground)] transition-colors">
+            진영
+          </Link>
           {admin ? (
             <>
               <Link href="/admin" className="hover:text-[var(--foreground)] transition-colors">

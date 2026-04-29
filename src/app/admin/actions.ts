@@ -54,7 +54,7 @@ export async function createPost(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath(`/posts/${data!.slug}`);
-  redirect(`/admin`);
+  redirect(`/admin?saved=created`);
 }
 
 export async function updatePost(id: string, formData: FormData) {
@@ -95,7 +95,24 @@ export async function updatePost(id: string, formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath(`/posts/${slug}`);
-  redirect(`/admin`);
+  redirect(`/admin?saved=updated`);
+}
+
+export async function togglePublished(id: string) {
+  await ensureAdmin();
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("posts")
+    .select("published")
+    .eq("id", id)
+    .single();
+  if (!data) return;
+  await supabase
+    .from("posts")
+    .update({ published: !data.published })
+    .eq("id", id);
+  revalidatePath("/");
+  revalidatePath("/admin");
 }
 
 export async function deletePost(id: string) {

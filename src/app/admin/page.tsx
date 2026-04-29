@@ -2,12 +2,28 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/utils";
 import type { Post } from "@/lib/types";
-import { deletePost } from "./actions";
+import { deletePost, togglePublished } from "./actions";
 import DeleteButton from "@/components/DeleteButton";
+import PublishToggle from "@/components/PublishToggle";
+import Toast from "@/components/Toast";
 
 export const revalidate = 0;
 
-export default async function AdminDashboard() {
+type SearchParams = Promise<{ saved?: string }>;
+
+const savedMessages: Record<string, string> = {
+  created: "글이 저장되었습니다",
+  updated: "글이 수정되었습니다",
+};
+
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { saved } = await searchParams;
+  const toastMessage = saved ? savedMessages[saved] ?? null : null;
+
   const supabase = await createClient();
   const { data: posts } = await supabase
     .from("posts")
@@ -18,6 +34,8 @@ export default async function AdminDashboard() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
+      <Toast message={toastMessage} />
+
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">관리</h1>
@@ -42,26 +60,26 @@ export default async function AdminDashboard() {
               key={post.id}
               className="flex items-center gap-4 px-5 py-4 bg-white hover:bg-zinc-50 transition-colors"
             >
+              <PublishToggle
+                published={post.published}
+                action={async () => {
+                  "use server";
+                  await togglePublished(post.id);
+                }}
+              />
+
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/posts/${encodeURIComponent(post.slug)}`}
-                    className="font-medium hover:underline truncate"
-                  >
-                    {post.title}
-                  </Link>
-                  {post.published ? (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 shrink-0">
-                      공개
-                    </span>
-                  ) : (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 shrink-0">
-                      초안
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-[var(--muted)] mt-1">
-                  {formatDate(post.created_at)} · /{post.slug}
+                <Link
+                  href={`/posts/${encodeURIComponent(post.slug)}`}
+                  className="font-medium hover:underline truncate block"
+                >
+                  {post.title}
+                </Link>
+                <p className="text-xs text-[var(--muted)] mt-0.5">
+                  {formatDate(post.created_at)} · /{post.slug} ·{" "}
+                  <span className={post.published ? "text-emerald-700" : "text-amber-700"}>
+                    {post.published ? "공개" : "비공개"}
+                  </span>
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
