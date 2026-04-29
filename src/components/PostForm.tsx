@@ -4,6 +4,7 @@ import { useState, useTransition, useRef } from "react";
 import Image from "next/image";
 import Editor from "./Editor";
 import { createClient } from "@/lib/supabase/client";
+import { prepareImageForUpload } from "@/lib/image";
 
 type Initial = {
   title: string;
@@ -40,12 +41,19 @@ export default function PostForm({
   const handleCoverPick = () => coverInputRef.current?.click();
 
   const handleCoverFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const raw = e.target.files?.[0];
     e.target.value = "";
-    if (!file) return;
+    if (!raw) return;
 
     setUploading(true);
     try {
+      let file: File;
+      try {
+        file = await prepareImageForUpload(raw);
+      } catch (err) {
+        alert(`이미지 변환 실패 (HEIC 등): ${(err as Error).message}`);
+        return;
+      }
       const supabase = createClient();
       const ext = file.name.split(".").pop() ?? "png";
       const path = `covers/${Date.now()}-${Math.random()

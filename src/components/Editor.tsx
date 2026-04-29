@@ -7,6 +7,7 @@ import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { createClient } from "@/lib/supabase/client";
+import { prepareImageForUpload } from "@/lib/image";
 
 type Props = {
   value: string;
@@ -44,8 +45,15 @@ function Toolbar({ editor }: { editor: TipTapEditor | null }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadAndInsert = useCallback(
-    async (file: File) => {
+    async (raw: File) => {
       if (!editor) return;
+      let file: File;
+      try {
+        file = await prepareImageForUpload(raw);
+      } catch (e) {
+        alert(`이미지 변환 실패 (HEIC 등): ${(e as Error).message}`);
+        return;
+      }
       const supabase = createClient();
       const ext = file.name.split(".").pop() ?? "png";
       const path = `posts/${Date.now()}-${Math.random()
