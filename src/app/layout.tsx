@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "jinyoung's blog",
-  description: "개인 블로그",
+  title: "한번 뿐인 내 인생",
+  description: "솔직하고 뜨겁게 하지만 겸손하게.",
 };
 
 export default function RootLayout({
@@ -32,8 +32,8 @@ export default function RootLayout({
         <Header />
         <main className="flex-1">{children}</main>
         <footer className="border-t border-[var(--border)] mt-16">
-          <div className="mx-auto max-w-3xl px-6 py-8 text-sm text-[var(--muted)]">
-            © {new Date().getFullYear()} jinyoung&apos;s blog
+          <div className="mx-auto max-w-[700px] px-6 py-8 text-sm text-[var(--muted)]">
+            © {new Date().getFullYear()} 한번 뿐인 내 인생
           </div>
         </footer>
       </body>

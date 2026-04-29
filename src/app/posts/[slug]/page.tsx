@@ -38,7 +38,7 @@ export default async function PostPage({ params }: { params: Params }) {
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-2xl px-6">
+      <div className="mx-auto max-w-[700px] px-6">
         <header className={`${post.cover_image ? "pt-12" : "pt-16"} pb-10 text-center`}>
           <Link
             href="/"

@@ -70,10 +70,12 @@ export default async function Home() {
   const [featured, ...rest] = list;
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-16">
+    <div className="mx-auto max-w-[700px] px-6 py-16">
       <section className="mb-16">
-        <h1 className="text-5xl font-bold tracking-tight">jinyoung&apos;s blog</h1>
-        <p className="mt-4 text-lg text-[var(--muted)]">기록하고 공유하는 곳.</p>
+        <h1 className="text-5xl font-bold tracking-tight">한번 뿐인 내 인생</h1>
+        <p className="mt-4 text-lg text-[var(--muted)]">
+          솔직하고 뜨겁게 하지만 겸손하게.
+        </p>
       </section>
 
       {list.length === 0 ? (

@@ -6,9 +6,9 @@ export default async function Header() {
 
   return (
     <header className="border-b border-[var(--border)]">
-      <div className="mx-auto max-w-3xl px-6 py-6 flex items-center justify-between">
+      <div className="mx-auto max-w-[700px] px-6 py-6 flex items-center justify-between">
         <Link href="/" className="text-lg font-semibold tracking-tight">
-          jinyoung&apos;s blog
+          한번 뿐인 내 인생
         </Link>
         <nav className="text-sm text-[var(--muted)] flex items-center gap-5">
           <Link href="/" className="hover:text-[var(--foreground)] transition-colors">
