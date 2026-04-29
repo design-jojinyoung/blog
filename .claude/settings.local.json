@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --app --eslint --src-dir --import-alias \"@/*\" --use-npm --no-turbopack --skip-install --yes)",
+      "Read(//private/tmp/**)",
+      "Bash(rm -rf blog-init)",
+      "Bash(npx --yes create-next-app@latest blog-init --typescript --tailwind --app --eslint --src-dir --import-alias \"@/*\" --use-npm --no-turbopack --skip-install --yes)",
+      "Bash(cp -R /tmp/blog-init/. /Users/jinyoung/Blog/)",
+      "Bash(rm -rf /Users/jinyoung/Blog/.git)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
