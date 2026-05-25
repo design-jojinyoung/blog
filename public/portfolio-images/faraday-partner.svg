@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#F7F4EF"/>
+
+  <!-- Scattered input dots - top -->
+  <circle cx="80"  cy="110" r="22" fill="#2D3A8C" opacity="0.18"/>
+  <circle cx="160" cy="70"  r="15" fill="#2D3A8C" opacity="0.13"/>
+  <circle cx="240" cy="130" r="19" fill="#2D3A8C" opacity="0.20"/>
+  <circle cx="310" cy="75"  r="13" fill="#2D3A8C" opacity="0.15"/>
+
+  <!-- Scattered input dots - middle -->
+  <circle cx="90"  cy="315" r="26" fill="#2D3A8C" opacity="0.22"/>
+  <circle cx="175" cy="275" r="18" fill="#2D3A8C" opacity="0.17"/>
+  <circle cx="255" cy="330" r="22" fill="#2D3A8C" opacity="0.19"/>
+  <circle cx="330" cy="280" r="16" fill="#2D3A8C" opacity="0.22"/>
+
+  <!-- Scattered input dots - bottom -->
+  <circle cx="85"  cy="510" r="20" fill="#2D3A8C" opacity="0.16"/>
+  <circle cx="165" cy="555" r="14" fill="#2D3A8C" opacity="0.13"/>
+  <circle cx="245" cy="500" r="24" fill="#2D3A8C" opacity="0.18"/>
+  <circle cx="320" cy="545" r="17" fill="#2D3A8C" opacity="0.15"/>
+
+  <!-- Funnel converging lines -->
+  <line x1="370" y1="52"  x2="790" y2="285" stroke="#2D3A8C" stroke-width="2" opacity="0.28" stroke-linecap="round"/>
+  <line x1="370" y1="578" x2="790" y2="345" stroke="#2D3A8C" stroke-width="2" opacity="0.28" stroke-linecap="round"/>
+
+  <!-- Mid-funnel dots -->
+  <circle cx="450" cy="230" r="13" fill="#2D3A8C" opacity="0.38"/>
+  <circle cx="510" cy="410" r="11" fill="#2D3A8C" opacity="0.38"/>
+  <circle cx="570" cy="195" r="10" fill="#2D3A8C" opacity="0.42"/>
+  <circle cx="630" cy="435" r="12" fill="#2D3A8C" opacity="0.40"/>
+  <circle cx="680" cy="260" r="9"  fill="#2D3A8C" opacity="0.48"/>
+  <circle cx="720" cy="370" r="9"  fill="#2D3A8C" opacity="0.48"/>
+
+  <!-- Near-output dots -->
+  <circle cx="780" cy="305" r="7" fill="#2D3A8C" opacity="0.60"/>
+  <circle cx="810" cy="325" r="6" fill="#2D3A8C" opacity="0.65"/>
+  <circle cx="840" cy="315" r="5" fill="#2D3A8C" opacity="0.70"/>
+
+  <!-- Output glow -->
+  <circle cx="980" cy="315" r="130" fill="#E8562A" opacity="0.07"/>
+  <circle cx="980" cy="315" r="90"  fill="#E8562A" opacity="0.13"/>
+  <circle cx="980" cy="315" r="58"  fill="#E8562A" opacity="0.28"/>
+  <circle cx="980" cy="315" r="32"  fill="#E8562A"/>
+</svg>
