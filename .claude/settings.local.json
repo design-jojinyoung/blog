@@ -16,7 +16,8 @@
       "Bash(gh auth *)",
       "Bash(brew --version)",
       "Bash(brew install *)",
-      "Bash(gh --version)"
+      "Bash(gh --version)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://blog-design-jojinyoung.vercel.app)"
     ]
   }
 }
